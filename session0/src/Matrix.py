@@ -51,6 +51,42 @@ class Matrix:
       return self.data[row][col]
 
 
+  def get_element(self, row, col):
+    """
+    Returns the element at the specified row and column.
+
+    Args:
+        row: The row index (0-based).
+        col: The column index (0-based).
+
+    Returns:
+        The element at the specified row and column.
+
+    Raises:
+        ValueError: If the row or column index is out of range.
+    """
+    if row < 0 or row >= self.shape[0] or col < 0 or col >= self.shape[1]:
+      raise ValueError("Row and column indices must be within the matrix dimensions")
+    
+    return self.data[row][col]
+
+  def set_element(self, row, col, value):
+    """
+    Sets the element at the specified row and column to the given value.
+
+    Args:
+        row: The row index (0-based).
+        col: The column index (0-based).
+        value: The value to set.
+
+    Raises:
+        ValueError: If the row or column index is out of range.
+    """
+    if row < 0 or row >= self.shape[0] or col < 0 or col >= self.shape[1]:
+      raise ValueError("Row and column indices must be within the matrix dimensions")
+    
+    self.data[row][col] = value
+
   def get_row(self, row_index):
     """
     Returns the row at the specified index.
@@ -69,6 +105,27 @@ class Matrix:
     
     return self.data[row_index]
 
+  def add_row(self, row, top=False):
+    """
+    Adds a row to the matrix.
+
+    Args:
+        row: The row to add.
+        top: Whether to add the row at the top (default: False).
+
+    Returns:
+        The updated matrix.
+    """
+    if len(row) != self.shape[1]:
+      raise ValueError("Row must have the same number of elements as the number of columns in the matrix")
+
+    self.shape = (self.shape[0] + 1, self.shape[1])
+    if top:
+      self.data.insert(0, row)
+    else:
+      self.data.append(row)
+
+    return self
   
   def get_column(self, col_index):
     """
@@ -92,6 +149,29 @@ class Matrix:
 
     return column_data
 
+  def add_column(self, column, left=False):
+    """
+    Adds a column to the matrix.
+
+    Args:
+        column: The column to add.    
+        left: Whether to add the column at the left (default: False).
+
+    Returns:
+        The updated matrix.
+    """
+    if len(column) != self.shape[0]:
+      raise ValueError("Column must have the same number of elements as the number of rows in the matrix")
+
+    self.shape = (self.shape[0], self.shape[1] + 1)
+    for i in range(self.shape[0]):
+      if left:
+        self.data[i].insert(0, column[i])
+      else:
+        self.data[i].append(column[i])
+
+    return self  
+
   def copy(self):
     
     """
@@ -106,4 +186,11 @@ class Matrix:
     """
     Returns a string representation of the Matrix.
     """
-    return "Shape: " + str(self.shape) + "\n" + str(self.data)  # Format: "Shape: (rows, cols)\n data"
+    output = "Shape: " + str(self.shape) + "\n"
+    output += "Data: [\n"
+    for row in self.data:
+      output += str(row) + "\n"
+
+    output += "]"
+
+    return  output  # Format: "Shape: (rows, cols)\n Data : [...]"

@@ -1,4 +1,7 @@
 import os
+from .DataFrame import DataFrame
+from .Matrix import Matrix
+from .Numpy import Numpy
 
 class Pandas:
   def read_csv(path):
@@ -14,19 +17,18 @@ class Pandas:
           columns = line.strip().split(',')
         else:
           data.append(line.strip().split(','))
-
-    data = []
+    
+    rows = []
     for row in data:
       row_data = []
       for element in row:
-        element = element.strip()
         try:
           row_data.append(float(element))
         except:
           raise ValueError("File contains non-numeric elements")
-      data.append(row_data)
+      rows.append(row_data)
 
-    return DataFrame(Matrix(data, (len(data), len(columns))), columns)
+    return DataFrame(Matrix(rows, (len(rows), len(columns))), columns)
 
   def describe(df):
     data = df.matrix

@@ -1,4 +1,5 @@
 import scipy
+from .Matrix import Matrix
 
 class Numpy:
   """
@@ -35,29 +36,6 @@ class Numpy:
       data.append(row)  # Append the row to the matrix data
     return Matrix(data, shape)  # Create and return a Matrix object
 
-  def add_row(matrix, row, top=False):
-    """
-    Placeholder for adding a row to a matrix.
-    """
-    matrix.shape = (matrix.shape[0] + 1, matrix.shape[1])  # Update the shape of the matrix
-    if top:  # If adding to the top of the row
-      matrix.data.insert(0, row)  # Insert the new row at the top
-    else:  # If adding to the bottom of the row
-      matrix.data.append(row)  # Append the new row to the matrix data
-    return matrix  # Return the updated matrix
-
-  def add_column(matrix, column, front=False):
-    """
-    Placeholder for adding a column to a matrix.
-    """
-    matrix.shape = (matrix.shape[0], matrix.shape[1] + 1)  # Update the shape of the matrix
-    for i in range(matrix.shape[0]):  # Iterate over rows
-      if front:  # If adding to the front of the column
-        matrix.data[i].insert(0, column[i])  # Insert the element at the front of the column
-      else:  # If adding to the end of the column
-        matrix.data[i].append(column[i])
-    return matrix  # Return the updated matrix
-
   def ones(shape):
     """
     Creates a matrix filled with ones.
@@ -68,13 +46,11 @@ class Numpy:
     Returns:
         A Matrix object filled with ones.
     """
-    data = []  # Initialize an empty list to store matrix data
-    for i in range(shape[0]):  # Iterate over rows
-      row = []  # Initialize an empty list for each row
-      for j in range(shape[1]):  # Iterate over columns
-        row.append(1)  # Append 1 to the current row
-      data.append(row)  # Append the row to the matrix data
-    return Matrix(data, shape)  # Create and return a Matrix object
+    matrix = Numpy.zeros(shape)  # Create a zeros matrix
+    for i in range(shape[0]): # Iterate over rows
+      for j in range(shape[1]): # Iterate over columns
+        matrix.data[i][j] = 1  # Set the element at (i, j) to 1
+    return matrix
 
   def eye(shape):
     """
@@ -91,16 +67,12 @@ class Numpy:
     """
     if shape[0] != shape[1]:  # Check if the matrix is square
       raise ValueError("Eye matrix must be a square matrix")  # Raise error if not square
-    data = []  # Initialize an empty list to store matrix data
-    for i in range(shape[0]):  # Iterate over rows
-      row = []  # Initialize an empty list for each row
-      for j in range(shape[1]):  # Iterate over columns
-        if i == j:  # Check if on the main diagonal
-          row.append(1)  # Append 1 if on the diagonal
-        else:
-          row.append(0)  # Append 0 otherwise
-      data.append(row)  # Append the row to the matrix data
-    return Matrix(data, shape)  # Create and return a Matrix object
+    matrix = Numpy.zeros(shape)  # Create a zeros matrix
+    for i in range(shape[0]): # Iterate over rows
+      for j in range(shape[1]): # Iterate over columns
+        if i == j:  # Check if not on the main diagonal
+            matrix.data[i][j] = 1  # Set the element at (i, j) to 1
+    return matrix
 
   def sum(matrix, axis=-1):
     """
@@ -117,32 +89,27 @@ class Numpy:
       raise ValueError("Input must be a Matrix object")  # Raise error if not a Matrix
 
     shape = matrix.shape  # Get the shape of the matrix
-    data = matrix.data  # Get the data of the matrix
 
     if axis == 0:  # Sum along columns
-      totals = []  # Initialize a list to store column sums
-      for j in range(shape[1]):  # Iterate over columns
-        total = 0  # Initialize sum for the current column
-        for i in range(shape[0]):  # Iterate over rows
-          total += data[i][j]  # Add element to column sum
-        totals.append(total)  # Append column sum to the list
-      return totals  # Return the list of column sums
+        totals = []  # Initialize a list to store column sums
+        for j in range(shape[1]):  # Iterate over columns
+            column = matrix.get_column(j)  # Get the column
+            totals.append(sum(column))  # Append the sum to the list
+        return totals  # Return the list of column sums
 
     elif axis == 1:  # Sum along rows
-      totals = []  # Initialize a list to store row sums
-      for i in range(shape[0]):  # Iterate over rows
-        total = 0  # Initialize sum for the current row
-        for j in range(shape[1]):  # Iterate over columns
-          total += data[i][j]  # Add element to row sum
-        totals.append(total)  # Append row sum to the list
-      return totals  # Return the list of row sums
+        totals = []  # Initialize a list to store row sums
+        for i in range(shape[0]):  # Iterate over rows
+            row = matrix.get_row(i)  # Get the row
+            totals.append(sum(row))  # Append the sum to the list
+        return totals  # Return the list of row sums
 
     else:  # Sum all elements
-      total = 0  # Initialize total sum
-      for i in range(shape[0]):  # Iterate over rows
-        for j in range(shape[1]):  # Iterate over columns
-          total += data[i][j]  # Add element to total sum
-      return total  # Return the total sum
+        total = 0  # Initialize total sum
+        for i in range(shape[0]):  # Iterate over rows
+            for j in range(shape[1]):  # Iterate over columns
+                total += matrix.get_element(i, j)  # Add element to total sum
+        return total  # Return the total sum
 
   def mean(matrix, axis=-1):
     """
@@ -159,7 +126,6 @@ class Numpy:
       raise ValueError("Input must be a Matrix object")  # Raise error if not a Matrix
 
     shape = matrix.shape  # Get the shape of the matrix
-    data = matrix.data  # Get the data of the matrix
 
     if axis == 0 or axis == 1:  # Mean along columns or rows
       sums = Numpy.sum(matrix, axis=axis)  # Calculate sums along the axis
@@ -178,7 +144,6 @@ class Numpy:
       raise ValueError("Input must be a Matrix object")  # Raise error if not a Matrix
     
     shape = matrix.shape  # Get the shape of the matrix
-    data = matrix.data  # Get the data of the matrix
 
     if axis == 0:  # Min along columns
       mins = []  # Initialize a list to store column mins
@@ -195,11 +160,11 @@ class Numpy:
       return mins  # Return the list of mins
 
     else:  # Min of all elements
-      min_value = data[0][0]  # Initialize min with the first element
+      min_value = matrix.get_element(0, 0)  # Initialize min with the first element
       for i in range(shape[0]):  # Iterate over rows
         for j in range(shape[1]):  # Iterate over columns
-          if data[i][j] < min_value:  # Check if current element is smaller
-            min_value = data[i][j]  # Update min if smaller
+          if matrix.get_element(i, j) < min_value:  # Check if current element is smaller
+            min_value = matrix.get_element(i, j)  # Update min if smaller
       return min_value  # Return the min
 
 
@@ -208,7 +173,6 @@ class Numpy:
       raise ValueError("Input must be a Matrix object")  # Raise error if not a Matrix
     
     shape = matrix.shape  # Get the shape of the matrix
-    data = matrix.data  # Get the data of the matrix
 
     if axis == 0:  # Max along columns
       maxs = []  # Initialize a list to store column maxs
@@ -225,11 +189,11 @@ class Numpy:
       return maxs  # Return the list of maxs
 
     else:  # Max of all elements
-      max_value = data[0][0]  # Initialize max with the first element
+      max_value = matrix.get_element(0, 0)  # Initialize max with the first element
       for i in range(shape[0]):  # Iterate over rows
         for j in range(shape[1]):  # Iterate over columns
-          if data[i][j] > max_value:  # Check if current element is larger
-            max_value = data[i][j]  # Update max if larger
+          if matrix.get_element(i, j) > max_value:  # Check if current element is larger
+            max_value = matrix.get_element(i, j)  # Update max if larger
       return max_value  # Return the max
     
   def transpose(matrix):
@@ -249,12 +213,11 @@ class Numpy:
       raise ValueError("Input must be a Matrix object")  # Raise error if not a Matrix
 
     shape = matrix.shape  # Get the shape of the matrix
-    data = matrix.data  # Get the data of the matrix
 
     transposed_matrix = Numpy.zeros(shape=(shape[1], shape[0]))  # Create a zeros matrix with swapped dimensions
     for i in range(shape[0]):  # Iterate over rows of the original matrix
       for j in range(shape[1]):  # Iterate over columns of the original matrix
-        transposed_matrix.data[j][i] = data[i][j]  # Copy element to the transposed position
+        transposed_matrix.set_element(j, i, matrix.get_element(i, j))  # Set the element at (j, i) to the original data[i][j]  # Copy element to the transposed position
 
     return transposed_matrix  # Return the transposed matrix
 
@@ -281,16 +244,15 @@ class Numpy:
     if shape1[1] != shape2[0]:  # Check if dimensions are compatible for dot product
       raise ValueError("Matrix dimensions are not compatible for dot product")  # Raise error if not compatible
 
-    data1 = matrix1.data  # Get the data of the first matrix
-    data2 = matrix2.data  # Get the data of the second matrix
-
     result_shape = (shape1[0], shape2[1])  # Determine the shape of the resulting matrix
     result_matrix = Numpy.zeros(result_shape)  # Create a zeros matrix for the result
 
     for i in range(result_shape[0]):  # Iterate over rows of the resulting matrix
       for j in range(result_shape[1]):  # Iterate over columns of the resulting matrix
+        val = 0
         for k in range(shape1[1]):  # Iterate over common dimension
-          result_matrix.data[i][j] += data1[i][k] * data2[k][j]  # Calculate dot product element
+          val += matrix1.get_element(i, k) * matrix2.get_element(k, j)
+        result_matrix.set_element(i, j, val)  # Calculate dot product element
 
     return result_matrix  # Return the resulting matrix
 
@@ -320,5 +282,5 @@ class Numpy:
     inv_arr = scipy.linalg.inv(data)
     for i in range(shape[0]):
       for j in range(shape[1]):
-        inv.data[i][j] = float(inv_arr[i][j])
+        inv.set_element(i, j, float(inv_arr[i][j]))
     return inv  # Return the inverse matrix

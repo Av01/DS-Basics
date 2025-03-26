@@ -1,3 +1,6 @@
+from .Matrix import Matrix
+from .Numpy import Numpy
+
 class DataFrame:
     # Initialization of the DataFrame object
     def __init__(self, matrix, columns, index=[]):
@@ -27,24 +30,42 @@ class DataFrame:
 
 
     # Function to retrieve data for a given column
-    def get(self, column):
-      if column not in self.columns:
-          raise ValueError("Column not found")
-      column_data = []
-      column_index = self.columns.index(column)
-      for row in self.matrix:
-          column_data.append(row[column_index])
-      return column_data
+    def get(self, key, axis):
+      if axis == 0:
+        if key not in self.index:
+            raise ValueError("Index not found")
+        row_index = self.index.index(key)
+        return self.matrix.get_row(row_index)
+      elif axis == 1:
+        if key not in self.columns:
+            raise ValueError("Column not found")
+        column_index = self.columns.index(key)
+        return self.matrix.get_column(column_index)
+      else:
+        raise ValueError("Invalid axis parameter")
 
 
     # Function to assign new values to a given column
-    def assign(self, column, values):
-      if len(values) != self.matrix.shape[0]:
-          raise ValueError("Number of values does not match the number of rows")
-      self.columns.append(column)
-      self.matrix = Numpy.add_column(self.matrix, values)
-      
+    def assign(self, key, values, axis):
+      if axis == 0:
+        if len(values) != self.matrix.shape[1]:
+            raise ValueError("Number of values does not match the number of columns")
+        if key in self.index:
+            raise ValueError("Key already present")
+        self.index.append(key)
+        self.matrix.add_row(values)
+      elif axis == 1:
+        if len(values) != self.matrix.shape[0]:
+            raise ValueError("Number of values does not match the number of rows")
+        if key in self.columns:
+            raise ValueError("Key already present")
+        self.columns.append(key)
+        self.matrix.add_column(values)
+      else:
+        raise ValueError("Invalid axis parameter")
 
+      
+      
     # A helper function to generate a string representation of a row with proper column widths
     def generate_row_string(row, col_width):
         elements = [str(element) for element in row]  # Convert all elements to strings
@@ -65,7 +86,7 @@ class DataFrame:
         output_string = "Shape: " + str(self.matrix.shape) + "\n"  # Add the shape information
 
         # Create a line that will separate the header and rows
-        row_line = "-" * (col_width + padding + 3) * (self.matrix.shape[0] + 1)
+        row_line = "-" * (col_width + padding + 3) * (self.matrix.shape[1] + 1)
 
         # Append the header with column names to the output string
         output_string += row_line + "\n"
